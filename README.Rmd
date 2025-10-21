@@ -29,11 +29,57 @@ av <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/data/master/av
 head(av)
 ```
 
+
 Get the data into a format where the five columns for Death[1-5] are replaced by two columns: Time, and Death. Time should be a number between 1 and 5 (look into the function `parse_number`); Death is a categorical variables with values "yes", "no" and "". Call the resulting data set `deaths`. 
+
+```{r}
+library(tidyverse)
+library(readr)
+deaths <- av %>%
+  select(Name.Alias, starts_with("Death")) %>%
+  pivot_longer(cols = starts_with("Death"),
+               names_to = "Time",
+               values_to = "Death") %>%
+  mutate(Time = parse_number(Time),
+         Death = case_when(
+           is.na(Death) ~ "",
+           str_to_lower(trimws(Death)) %in% c("yes", "no") ~ str_to_lower(trimws(Death)),
+           TRUE ~ str_to_lower(trimws(Death))
+         )) %>%
+  filter(Death != "")
+
+deaths
+```
 
 Similarly, deal with the returns of characters.
 
+```{r}
+returns <- av %>%
+  select(Name.Alias, starts_with("Return")) %>%
+  pivot_longer(cols = starts_with("Return"),
+               names_to = "Time",
+               values_to = "Return") %>%
+  mutate(Time = parse_number(Time),
+         Return = case_when(
+           is.na(Return) ~ "",
+           str_to_lower(trimws(Return)) %in% c("yes", "no") ~ str_to_lower(trimws(Return)),
+           TRUE ~ str_to_lower(trimws(Return))
+         )) %>%
+  filter(Return != "")
+
+returns
+```
+
 Based on these datasets calculate the average number of deaths an Avenger suffers. 
+
+```{r}
+avg_deaths <- deaths %>%
+  filter(Death == "yes") %>%
+  count(Name.Alias, name = "deaths") %>%
+  summarize(avg_deaths = mean(deaths))
+
+avg_deaths
+```
 
 ## Individually
 
@@ -43,14 +89,31 @@ Each team member picks one of the statements in the FiveThirtyEight [analysis](h
 
 ### FiveThirtyEight Statement
 
-> Quote the statement you are planning to fact-check.
+Henry Tang
+
+> Out of 173 listed Avengers, my analysis found that 69 had died at least one time after they joined the team.  That’s about 40 percent of all people who have ever signed on to the team.
+
 
 ### Include the code
 
-Make sure to include the code to derive the (numeric) fact for the statement
+Henry Tang
+
+```{r}
+total_avengers <- n_distinct(deaths$Name.Alias)
+
+died_once <- deaths %>%
+  filter(Death == "yes") %>%
+  distinct(Name.Alias) %>%
+  nrow()
+
+pct_death <- 100*died_once/total_avengers
+data.frame(died_once, total_avengers, pct_death)
+```
 
 ### Include your answer
 
-Include at least one sentence discussing the result of your fact-checking endeavor.
+Henry Tang
+
+I found slightly different numbers but the same percentage, 40% vs 39.26%. Perhaps the dataset has changed at some point in the meantime, it seems that there have been some commits even in the current year.
 
 Upload your changes to the repository. Discuss and refine answers as a team.

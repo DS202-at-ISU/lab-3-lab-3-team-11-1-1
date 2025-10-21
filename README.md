@@ -1,4 +1,3 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/LsTaLPbx)
 
 <!-- README.md is generated from README.Rmd. Please edit the README.Rmd file -->
 
@@ -72,10 +71,104 @@ between 1 and 5 (look into the function `parse_number`); Death is a
 categorical variables with values “yes”, “no” and ““. Call the resulting
 data set `deaths`.
 
+``` r
+library(tidyverse)
+```
+
+    ## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+    ## ✔ dplyr     1.1.4     ✔ readr     2.1.5
+    ## ✔ forcats   1.0.0     ✔ stringr   1.5.1
+    ## ✔ ggplot2   4.0.0     ✔ tibble    3.3.0
+    ## ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+    ## ✔ purrr     1.1.0     
+    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ✖ dplyr::filter() masks stats::filter()
+    ## ✖ dplyr::lag()    masks stats::lag()
+    ## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+
+``` r
+library(readr)
+deaths <- av %>%
+  select(Name.Alias, starts_with("Death")) %>%
+  pivot_longer(cols = starts_with("Death"),
+               names_to = "Time",
+               values_to = "Death") %>%
+  mutate(Time = parse_number(Time),
+         Death = case_when(
+           is.na(Death) ~ "",
+           str_to_lower(trimws(Death)) %in% c("yes", "no") ~ str_to_lower(trimws(Death)),
+           TRUE ~ str_to_lower(trimws(Death))
+         )) %>%
+  filter(Death != "")
+
+deaths
+```
+
+    ## # A tibble: 194 × 3
+    ##    Name.Alias                       Time Death
+    ##    <chr>                           <dbl> <chr>
+    ##  1 "Henry Jonathan \"Hank\" Pym"       1 yes  
+    ##  2 "Janet van Dyne"                    1 yes  
+    ##  3 "Anthony Edward \"Tony\" Stark"     1 yes  
+    ##  4 "Robert Bruce Banner"               1 yes  
+    ##  5 "Thor Odinson"                      1 yes  
+    ##  6 "Thor Odinson"                      2 yes  
+    ##  7 "Richard Milhouse Jones"            1 no   
+    ##  8 "Steven Rogers"                     1 yes  
+    ##  9 "Clinton Francis Barton"            1 yes  
+    ## 10 "Clinton Francis Barton"            2 yes  
+    ## # ℹ 184 more rows
+
 Similarly, deal with the returns of characters.
+
+``` r
+returns <- av %>%
+  select(Name.Alias, starts_with("Return")) %>%
+  pivot_longer(cols = starts_with("Return"),
+               names_to = "Time",
+               values_to = "Return") %>%
+  mutate(Time = parse_number(Time),
+         Return = case_when(
+           is.na(Return) ~ "",
+           str_to_lower(trimws(Return)) %in% c("yes", "no") ~ str_to_lower(trimws(Return)),
+           TRUE ~ str_to_lower(trimws(Return))
+         )) %>%
+  filter(Return != "")
+
+returns
+```
+
+    ## # A tibble: 89 × 3
+    ##    Name.Alias                       Time Return
+    ##    <chr>                           <dbl> <chr> 
+    ##  1 "Henry Jonathan \"Hank\" Pym"       1 no    
+    ##  2 "Janet van Dyne"                    1 yes   
+    ##  3 "Anthony Edward \"Tony\" Stark"     1 yes   
+    ##  4 "Robert Bruce Banner"               1 yes   
+    ##  5 "Thor Odinson"                      1 yes   
+    ##  6 "Thor Odinson"                      2 no    
+    ##  7 "Steven Rogers"                     1 yes   
+    ##  8 "Clinton Francis Barton"            1 yes   
+    ##  9 "Clinton Francis Barton"            2 yes   
+    ## 10 "Pietro Maximoff"                   1 yes   
+    ## # ℹ 79 more rows
 
 Based on these datasets calculate the average number of deaths an
 Avenger suffers.
+
+``` r
+avg_deaths <- deaths %>%
+  filter(Death == "yes") %>%
+  count(Name.Alias, name = "deaths") %>%
+  summarize(avg_deaths = mean(deaths))
+
+avg_deaths
+```
+
+    ## # A tibble: 1 × 1
+    ##   avg_deaths
+    ##        <dbl>
+    ## 1       1.39
 
 ## Individually
 
@@ -88,17 +181,38 @@ possible.
 
 ### FiveThirtyEight Statement
 
-> Quote the statement you are planning to fact-check.
+Henry Tang
+
+> Out of 173 listed Avengers, my analysis found that 69 had died at
+> least one time after they joined the team. That’s about 40 percent of
+> all people who have ever signed on to the team.
 
 ### Include the code
 
-Make sure to include the code to derive the (numeric) fact for the
-statement
+Henry Tang
+
+``` r
+total_avengers <- n_distinct(deaths$Name.Alias)
+
+died_once <- deaths %>%
+  filter(Death == "yes") %>%
+  distinct(Name.Alias) %>%
+  nrow()
+
+pct_death <- 100*died_once/total_avengers
+data.frame(died_once, total_avengers, pct_death)
+```
+
+    ##   died_once total_avengers pct_death
+    ## 1        64            163   39.2638
 
 ### Include your answer
 
-Include at least one sentence discussing the result of your
-fact-checking endeavor.
+Henry Tang
+
+I found slightly different numbers but the same percentage, 40% vs
+39.26%. Perhaps the dataset has changed at some point in the meantime,
+it seems that there have been some commits even in the current year.
 
 Upload your changes to the repository. Discuss and refine answers as a
 team.
