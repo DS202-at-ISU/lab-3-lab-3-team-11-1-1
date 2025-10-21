@@ -189,8 +189,6 @@ Henry Tang
 
 ### Include the code
 
-Henry Tang
-
 ``` r
 total_avengers <- n_distinct(deaths$Name.Alias)
 
@@ -207,8 +205,6 @@ data.frame(died_once, total_avengers, pct_death)
     ## 1        64            163   39.2638
 
 ### Include your answer
-
-Henry Tang
 
 I found slightly different numbers but the same percentage, 40% vs
 39.26%. Perhaps the dataset has changed at some point in the meantime,
